@@ -129,7 +129,7 @@ int test_insert_first_split()
     mu_assert(pnode->cdir->cnode->pdir == NULL, "pdir in the lower cnode does not have a pdir");
     mu_assert(pnode->cdir->cnode->lnode != NULL, "inner cnode has a lnode");
     mu_assert(pnode->cdir->cnode->lnode->sub_count == 3, "tree has three sub in the second lnode");
-
+    
     betree_free(tree);
     return 0;
 }
@@ -191,7 +191,7 @@ int test_pdir_split_twice()
     mu_assert(tree->cnode->lnode->sub_count == 1 && tree->cnode->lnode->subs[0]->id == 7,
         "subs7 in first lnode");
 
-    betree_free(tree);
+        betree_free(tree);
     return 0;
 }
 
@@ -236,7 +236,7 @@ int test_cdir_split_twice()
     mu_assert(tree->cnode->lnode->sub_count == 1 && tree->cnode->lnode->subs[0]->id == 4,
         "subs4 in first lnode");
 
-    betree_free(tree);
+        betree_free(tree);
     return 0;
 }
 
@@ -446,7 +446,7 @@ int test_float()
             && pnode->cdir->rchild->cnode->lnode->sub_count == 1,
         "structure is respected");
 
-    betree_free(tree);
+        betree_free(tree);
 
     return 0;
 }
@@ -541,7 +541,7 @@ int test_negative_int()
             && rchild->bound.imax == max,
         "cdirs have proper bounds");
 
-    betree_free(tree);
+        betree_free(tree);
 
     return 0;
 }
@@ -575,7 +575,7 @@ int test_negative_float()
             && feq(rchild->bound.fmax, max),
         "cdirs have proper bounds");
 
-    betree_free(tree);
+        betree_free(tree);
 
     return 0;
 }
@@ -608,7 +608,7 @@ int test_integer_set()
         free_report(report);
         empty_tree(tree);
     }
-
+    
     betree_free(tree);
 
     return 0;

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <valgrind/callgrind.h>
+// #include <valgrind/callgrind.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
@@ -19,18 +19,20 @@
 #include "tree.h"
 #include "utils.h"
 
-#define MAX_EXPRS 10000
-#define MAX_EVENTS 5000
+#define MAX_EXPRS 40000
+#define MAX_EVENTS 50000
 #define DEFAULT_SEARCH_COUNT 10
 
 // wc -L filename
-#define MAX_EVENT_CHARACTERS 20000
-#define MAX_EXPR_CHARACTERS 17000
-#define MAX_CONSTANT_CHARACTERS 20
+#define MAX_EVENT_CHARACTERS 400000
+// #define MAX_EXPR_CHARACTERS 17000
+#define MAX_EXPR_CHARACTERS 300000
+#define MAX_CONSTANT_CHARACTERS 21
 
-const char* EXPRS_FILE = "data/betree_exprs";
-const char* CONSTANTS_FILE = "data/betree_constants";
-const char* EVENTS_FILE = "data/betree_events";
+const char* EXPRS_FILE = "../data/betree_exprs";
+const char* CONSTANTS_FILE = "../data/betree_constants";
+const char* EVENTS_FILE = "../data/betree_events";
+
 
 struct betree_events {
     size_t count;
@@ -105,9 +107,12 @@ size_t read_betree_exprs(struct betree* tree)
     char constants_line[MAX_CONSTANT_CHARACTERS];
     size_t count = 0;
     const struct betree_sub* subs[MAX_EXPRS];
+    // size_t nline = 0;
 
-    enum e { constant_count = 3 };
+    enum e { constant_count =  4};
     while(fgets(line, sizeof(line), f)) {
+        // printf("nline = %zu\n", ++nline);
+        // if (nline > 50) {break;}
         char* ignore = fgets(constants_line, sizeof(constants_line), constants_f);
         (void)ignore;
         char* copy = strdup(constants_line);
@@ -115,11 +120,14 @@ size_t read_betree_exprs(struct betree* tree)
         int64_t campaign_id = strtoll(strtok_r(rest, ",", &rest), NULL, 10);
         int64_t advertiser_id = strtoll(strtok_r(rest, ",", &rest), NULL, 10);
         int64_t flight_id = strtoll(strtok_r(rest, "\n", &rest), NULL, 10);
+
         const struct betree_constant* constants[constant_count] = {
+            betree_make_integer_constant("campaign_group_id", campaign_id),
             betree_make_integer_constant("campaign_id", campaign_id),
             betree_make_integer_constant("advertiser_id", advertiser_id),
-            betree_make_integer_constant("flight_id", flight_id),
+            betree_make_integer_constant("flight_id", flight_id)
         };
+
 
         const struct betree_sub* sub = betree_make_sub(tree, count, constant_count, constants, line);
         subs[count] = sub;
@@ -181,17 +189,21 @@ int main(int argc, char** argv)
 
     // Init
     struct betree* tree = betree_make();
-    read_betree_defs(tree);
+        read_betree_defs(tree);
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
     // Insert
     size_t expr_count = read_betree_exprs(tree);
 
+    // DEBUG
+    // write_dot_file(tree);
+    // DEBUG
+
     clock_gettime(CLOCK_MONOTONIC_RAW, &insert_done);
     uint64_t insert_us = (insert_done.tv_sec - start.tv_sec) * 1000000
         + (insert_done.tv_nsec - start.tv_nsec) / 1000;
-    printf("    Insert took %" PRIu64 "\n", insert_us);
+    printf("    Insert took %" PRIu64 "\n", insert_us); 
 
     struct betree_events events = { .count = 0, .events = NULL };
     size_t event_count = read_betree_events(&events);
@@ -204,7 +216,7 @@ int main(int argc, char** argv)
     const size_t search_us_count = search_count * events.count;
     double search_us_data[search_us_count];
 
-    CALLGRIND_START_INSTRUMENTATION;
+    // // CALLGRIND_START_INSTRUMENTATION;
 
     size_t search_us_i = 0;
     
@@ -236,8 +248,8 @@ int main(int argc, char** argv)
         printf("Finished run %zu/%zu\n", j, search_count);
     }
 
-    CALLGRIND_STOP_INSTRUMENTATION;
-    CALLGRIND_DUMP_STATS;
+    // // CALLGRIND_STOP_INSTRUMENTATION;
+    // // CALLGRIND_DUMP_STATS;
 
     for(size_t i = 0; i < events.count; i++) {
         free(events.events[i]);
@@ -270,9 +282,6 @@ int main(int argc, char** argv)
 
     printf("| %lu | %.1f | %.1f | %.1f | %.1f | %.1f | %.1f | |\n", insert_us, search_us_min, search_us_mean, search_us_max, search_us_90, search_us_95, search_us_99);
 
-    // DEBUG
-    write_dot_file(tree);
-    // DEBUG
     
     free(events.events);
     betree_free(tree);

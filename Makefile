@@ -4,7 +4,11 @@
 
 UNAME := $(shell uname)
 
-CFLAGS := -O3 -g -std=gnu11 -Wall -Wextra -Wshadow -Wfloat-equal -Wundef -Wcast-align \
+# -O3 -g \
+# CFLAGS := -O0 -g \
+
+CFLAGS := -O3 -g \
+	-std=gnu11 -Wall -Wextra -Wshadow -Wfloat-equal -Wundef -Wcast-align \
 	-Wwrite-strings -Wunreachable-code -Wformat=2 -Wswitch-enum \
 	-Wswitch-default -Winit-self -Wno-strict-aliasing
 
@@ -31,9 +35,11 @@ OBJECTS = \
 	$(patsubst %.c,%.o,$(SOURCES)) \
 	$(GENERATED_OBJECTS)
 
-TEST_SOURCES=$(wildcard tests/*_tests.c)
+# TEST_SOURCES=$(wildcard tests/*_tests.c)
+TEST_SOURCES=$(wildcard tests/real_tests.c)
 TEST_BINARIES=$(patsubst %.c,%,${TEST_SOURCES})
-
+TOOL_SOURCES=$(wildcard tools/*.c)
+TOOL_OBJECTS=$(patsubst %.c,%,${TOOL_SOURCES})
 LEX?=flex
 YACC?=bison
 YFLAGS?=-dv
@@ -134,7 +140,7 @@ valgrind: $(TEST_BINARIES)
 	$(VALGRIND) build/tests/report_tests
 	$(VALGRIND) build/tests/special_tests
 	$(VALGRIND) build/tests/valid_tests
-	#$(VALGRIND) build/tests/real_tests 1
+	$(VALGRIND) build/tests/real_tests 1
 
 callgrind:
 	$(CALLGRIND) build/tests/real_tests 1

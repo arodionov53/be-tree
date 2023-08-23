@@ -113,3 +113,6 @@ At the end of this, we return a report with all the subscriptions id found to be
 * betree_remove should remove useless preds from the memoize
 * What if we wrote the lexers/parsers to have the set of possible attributes directly since we know them. While we never use the string attribute during runtime, it slows insertion.
 
+## PS
+
+Extract test data used in `rea_tests.c` from `data.tar.gz`.

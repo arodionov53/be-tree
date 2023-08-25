@@ -29,10 +29,9 @@
 #define MAX_EXPR_CHARACTERS 300000
 #define MAX_CONSTANT_CHARACTERS 21
 
-const char* EXPRS_FILE = "../data/betree_exprs";
-const char* CONSTANTS_FILE = "../data/betree_constants";
-const char* EVENTS_FILE = "../data/betree_events";
-
+const char* EXPRS_FILE = "./data/betree_exprs";
+const char* CONSTANTS_FILE = "./data/betree_constants";
+const char* EVENTS_FILE = "./data/betree_events";
 
 struct betree_events {
     size_t count;
@@ -107,12 +106,15 @@ size_t read_betree_exprs(struct betree* tree)
     char constants_line[MAX_CONSTANT_CHARACTERS];
     size_t count = 0;
     const struct betree_sub* subs[MAX_EXPRS];
-    // size_t nline = 0;
+    size_t nline = 0;
 
     enum e { constant_count =  4};
     while(fgets(line, sizeof(line), f)) {
-        // printf("nline = %zu\n", ++nline);
-        // if (nline > 50) {break;}
+        ++nline;
+        // printf("nline = %zu\n", nline);
+        // if (nline > 2130) {break;}
+        // if (nline <= 2130) {continue;}
+        // if (nline > 3195) {break;}
         char* ignore = fgets(constants_line, sizeof(constants_line), constants_f);
         (void)ignore;
         char* copy = strdup(constants_line);
@@ -180,8 +182,8 @@ int main(int argc, char** argv)
     if(argc > 1) {
         search_count = atoi(argv[1]);
     }
-    if(access("data/betree_defs", F_OK) == -1 || access("data/betree_events", F_OK) == -1
-        || access("data/betree_exprs", F_OK) == -1 || access("data/betree_constants", F_OK) == -1) {
+    if(access(EXPRS_FILE, F_OK) == -1 || access(EVENTS_FILE, F_OK) == -1
+        || access(EXPRS_FILE, F_OK) == -1 || access(CONSTANTS_FILE, F_OK) == -1) {
         fprintf(stderr, "Missing files, skipping the tests");
         return 0;
     }

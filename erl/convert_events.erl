@@ -1,4 +1,10 @@
--module(we).
+% 
+% Convers files with raw events from betree_events_raw to proper format betree_events
+% For example
+% convert_events:convert_files("be-search-args", "../build/tests/data/betree_events").
+% 
+
+-module(convert_events).
 
 
 -export([convert_files/0, convert_files/1, convert_files/2]).
@@ -132,7 +138,7 @@ convert([Tpl | Tail]) ->
 tbeautify({segments_with_timestamp, Vals}) ->
     [atom_to_list(segments_with_timestamp), sbeutify(Vals)];
 tbeautify({frequency_caps, Vals}) ->
-    [atom_to_list(frequency_caps) , fbeutify(Vals)];
+    [atom_to_list(frequency_caps), fbeutify(Vals)];
 tbeautify({Name, Value}) ->
     [atom_to_list(Name), vbeautify(Value)].
 
@@ -226,5 +232,6 @@ test() ->
                             undefined,false,0,5,120,1920,1080,true,
                             undefined,undefined,[]}].
     
-% we:beautify(we:convert(we:test())).
-% lists:foreach(fun(X) -> io:format("~p:~p,~n", X) end, we:beautify(we:convert(we:test()))).
+% convert_events:beautify(convert_events:convert(convert_events:test())).
+% lists:foreach(fun(X) -> io:format("~p:~p,~n", X) end, convert_events:beautify(convert_events:convert(convert_events:test()))).
+% 

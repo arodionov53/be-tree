@@ -557,7 +557,7 @@ static const struct betree_variable** make_environment(size_t attr_domain_count,
     return preds;
 }
 
-static bool betree_search_with_event_filled(const struct betree* betree, struct betree_event* event, struct report* report)
+bool betree_search_with_event_filled(const struct betree* betree, struct betree_event* event, struct report* report)
 {
     const struct betree_variable** variables
         = make_environment(betree->config->attr_domain_count, event);

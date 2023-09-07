@@ -26,17 +26,25 @@
 // wc -L filename
 #define MAX_EVENT_CHARACTERS 400000
 // #define MAX_EXPR_CHARACTERS 17000
-#define MAX_EXPR_CHARACTERS 300000
-#define MAX_CONSTANT_CHARACTERS 21
+#define MAX_EXPR_CHARACTERS 600000
+#define MAX_CONSTANT_CHARACTERS 48
 
 const char* EXPRS_FILE = "./data/betree_exprs";
 const char* CONSTANTS_FILE = "./data/betree_constants";
 const char* EVENTS_FILE = "./data/betree_events";
+const char* DEFS_FILE = "./data/betree_defs";
+
+int expr_length[MAX_EXPRS];
+size_t count = 0;
 
 struct betree_events {
     size_t count;
     char** events;
 };
+
+
+bool betree_search_with_event_filled(const struct betree* betree, struct betree_event* event, struct report* report);
+
 
 void add_event(char* event, struct betree_events* events)
 {
@@ -104,27 +112,32 @@ size_t read_betree_exprs(struct betree* tree)
     //char* lines[MAX_EXPRS];
     char line[MAX_EXPR_CHARACTERS]; // Arbitrary from what I've seen
     char constants_line[MAX_CONSTANT_CHARACTERS];
-    size_t count = 0;
+    // size_t count = 0;
     const struct betree_sub* subs[MAX_EXPRS];
     size_t nline = 0;
 
     enum e { constant_count =  4};
     while(fgets(line, sizeof(line), f)) {
+        expr_length[nline] = sizeof(line);
         ++nline;
-        // printf("nline = %zu\n", nline);
+        // printf("nline = %zu, %s\n", nline, line);
         // if (nline > 2130) {break;}
         // if (nline <= 2130) {continue;}
         // if (nline > 3195) {break;}
         char* ignore = fgets(constants_line, sizeof(constants_line), constants_f);
         (void)ignore;
         char* copy = strdup(constants_line);
+        // printf("nline = %zu, %s\n", nline, copy);
+
+        // exit(1);
         char* rest = copy;
+        int64_t campaign_group_id = strtoll(strtok_r(rest, ",", &rest), NULL, 10);
         int64_t campaign_id = strtoll(strtok_r(rest, ",", &rest), NULL, 10);
         int64_t advertiser_id = strtoll(strtok_r(rest, ",", &rest), NULL, 10);
         int64_t flight_id = strtoll(strtok_r(rest, "\n", &rest), NULL, 10);
 
         const struct betree_constant* constants[constant_count] = {
-            betree_make_integer_constant("campaign_group_id", campaign_id),
+            betree_make_integer_constant("campaign_group_id", campaign_group_id),
             betree_make_integer_constant("campaign_id", campaign_id),
             betree_make_integer_constant("advertiser_id", advertiser_id),
             betree_make_integer_constant("flight_id", flight_id)
@@ -160,7 +173,7 @@ size_t read_betree_exprs(struct betree* tree)
 
 void read_betree_defs(struct betree* tree)
 {
-    FILE* f = fopen("data/betree_defs", "r");
+    FILE* f = fopen(DEFS_FILE, "r");
 
     char line[LINE_MAX];
     while(fgets(line, sizeof(line), f)) {
@@ -182,11 +195,37 @@ int main(int argc, char** argv)
     if(argc > 1) {
         search_count = atoi(argv[1]);
     }
-    if(access(EXPRS_FILE, F_OK) == -1 || access(EVENTS_FILE, F_OK) == -1
-        || access(EXPRS_FILE, F_OK) == -1 || access(CONSTANTS_FILE, F_OK) == -1) {
-        fprintf(stderr, "Missing files, skipping the tests");
+    if(argc > 2) {
+        EVENTS_FILE = argv[2];
+    }
+    if(argc > 3) {
+        EXPRS_FILE = argv[3];
+    }
+    if(argc > 4) {
+        CONSTANTS_FILE = argv[4];
+    }
+    if(argc > 5) {
+        DEFS_FILE = argv[5];
+    }
+    printf("EVENTS_FILE: %s, EXPRS_FILE: %s, CONSTANTS_FILE: %s\n", EVENTS_FILE, EXPRS_FILE, CONSTANTS_FILE);
+
+    if(access(EXPRS_FILE, F_OK) == -1)  {
+        fprintf(stderr, "Missing EXPRS_FILE file: %s, skipping the tests\n", EXPRS_FILE);
         return 0;
     }
+    if(access(EVENTS_FILE, F_OK) == -1)  {
+        fprintf(stderr, "Missing EVENTS_FILE file: %s, skipping the tests\n", EVENTS_FILE);
+        return 0;
+    }
+    if(access(CONSTANTS_FILE, F_OK) == -1)  {
+        fprintf(stderr, "Missing CONSTANTS_FILE file: %s, skipping the tests\n", CONSTANTS_FILE);
+        return 0;
+    }
+    if(access(DEFS_FILE, F_OK) == -1)  {
+        fprintf(stderr, "Missing DEFS_FILE file: %s, skipping the tests\n", DEFS_FILE);
+        return 0;
+    }
+
     struct timespec start, insert_done, gen_event_done, search_done;
 
     // Init
@@ -218,23 +257,29 @@ int main(int argc, char** argv)
     const size_t search_us_count = search_count * events.count;
     double search_us_data[search_us_count];
 
-    // // CALLGRIND_START_INSTRUMENTATION;
-
     size_t search_us_i = 0;
     
     for(size_t j = 0; j < search_count; j++) {
         for(size_t i = 0; i < events.count; i++) {
-            clock_gettime(CLOCK_MONOTONIC_RAW, &gen_event_done);
-
-            char* event = events.events[i];
+            const char* event = events.events[i];
             struct report* report = make_report();
-            if(betree_search(tree, event, report) == false) {
+            struct betree_event* be_event = make_event_from_string(tree, event);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &gen_event_done);
+#ifdef __CALLGRIND_H
+    CALLGRIND_START_INSTRUMENTATION;
+    CALLGRIND_TOGGLE_COLLECT;
+#endif
+            bool result = betree_search_with_event_filled(tree, be_event, report);
+#ifdef __CALLGRIND_H
+    CALLGRIND_TOGGLE_COLLECT;
+    CALLGRIND_STOP_INSTRUMENTATION;
+#endif
+            clock_gettime(CLOCK_MONOTONIC_RAW, &search_done);
+            free_event(be_event);
+            if(result == false) {
                 fprintf(stderr, "Failed to search with event\n");
                 abort();
             }
-
-            clock_gettime(CLOCK_MONOTONIC_RAW, &search_done);
-
             uint64_t search_us = (search_done.tv_sec - gen_event_done.tv_sec) * 1000000
                 + (search_done.tv_nsec - gen_event_done.tv_nsec) / 1000;
 
@@ -249,10 +294,9 @@ int main(int argc, char** argv)
         }
         printf("Finished run %zu/%zu\n", j, search_count);
     }
-
-    // // CALLGRIND_STOP_INSTRUMENTATION;
-    // // CALLGRIND_DUMP_STATS;
-
+#ifdef __CALLGRIND_H
+    CALLGRIND_DUMP_STATS;
+#endif
     for(size_t i = 0; i < events.count; i++) {
         free(events.events[i]);
     }
@@ -274,13 +318,14 @@ int main(int argc, char** argv)
 
     double search_us_min = gsl_stats_min(search_us_data, 1, search_us_count);
     double search_us_max = gsl_stats_max(search_us_data, 1, search_us_count);
+    size_t index_max = gsl_stats_max_index(search_us_data, 1, search_us_count);
     double search_us_mean = gsl_stats_mean(search_us_data, 1, search_us_count);
     gsl_sort(search_us_data, 1, search_us_count);
     double search_us_90 = gsl_stats_quantile_from_sorted_data(search_us_data, 1, search_us_count, 0.90);
     double search_us_95 = gsl_stats_quantile_from_sorted_data(search_us_data, 1, search_us_count, 0.95);
     double search_us_99 = gsl_stats_quantile_from_sorted_data(search_us_data, 1, search_us_count, 0.99);
 
-    printf("Min: %.1f, Mean: %.1f, Max: %.1f, 90: %.1f, 95: %.1f, 99: %.1f\n", search_us_min, search_us_mean, search_us_max, search_us_90, search_us_95, search_us_99);
+    printf("Min: %.1f, Mean: %.1f, Max: %.1f at %zu, 90: %.1f, 95: %.1f, 99: %.1f\n", search_us_min, search_us_mean, search_us_max, index_max, search_us_90, search_us_95, search_us_99);
 
     printf("| %lu | %.1f | %.1f | %.1f | %.1f | %.1f | %.1f | |\n", insert_us, search_us_min, search_us_mean, search_us_max, search_us_90, search_us_95, search_us_99);
 

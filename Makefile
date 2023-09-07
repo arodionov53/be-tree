@@ -4,7 +4,8 @@
 
 UNAME := $(shell uname)
 
-# -O3 -g \
+# CFLAGS := -O3 -g \
+
 # CFLAGS := -O0 -g \
 
 CFLAGS := -O3 -g \
@@ -18,7 +19,8 @@ LDFLAGS_TESTS := $(LDFLAGS) -lgsl -lgslcblas
 LEX_SOURCES = $(wildcard src/*.l)
 LEX_INTERMEDIATES = \
 	$(patsubst %.l,%.c,${LEX_SOURCES}) \
-	$(patsubst %.l,%.h,${LEX_SOURCES})
+	$(patsubst %.l,%.h,${LEX_SOURCES})pwd
+
 
 YACC_SOURCES = $(wildcard src/*.y)
 YACC_INTERMEDIATES = \
@@ -122,7 +124,7 @@ $(TEST_BINARIES): %: %.c build/tests build/libbetree.a
 
 clean:
 	$(RM) $(OBJECTS)
-	$(RM) -rf build
+	# $(RM) -rf build
 
 realclean: clean
 	$(RM) $(INTERMEDIATES)

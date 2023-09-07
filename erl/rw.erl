@@ -1,3 +1,8 @@
+% 
+% 
+% 
+% 
+
 -module(rw).
 
 
@@ -5,7 +10,7 @@
 -export([tp_f/0, tp_f/1, to_file/0, to_file/1, to_file/2]).
 
 % @doc Predefined ast variables.
-% From  rtb_gateway/src/boolean_languages/flight_compiler.er'
+% From  rtb_gateway/src/boolean_languages/flight_compiler.erl'
 ast_variables() ->
     [A, B] = variables(),
     A ++ B.

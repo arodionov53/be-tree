@@ -480,7 +480,8 @@ bool betree_insert_with_constants(struct betree* tree,
 {
     struct ast_node* node;
     if(parse(expr, &node) != 0) {
-        fprintf(stderr, "Can't parse %ld\n", id);
+        fprintf(stderr, "betree_insert_with_constants: Can't parse %ld\n", id);
+        fprintf(stderr, "Can't parse: %s\n", expr);
         return false;
     }
     assign_variable_id(tree->config, node);
@@ -507,7 +508,8 @@ const struct betree_sub* betree_make_sub(struct betree* tree, betree_sub_t id, s
     // fprintf(stdout, "expr:%s\n", expr);
     struct ast_node* node;
     if(parse(expr, &node) != 0) {
-        fprintf(stderr, "Can't parse %ld\n", id);
+        fprintf(stderr, "betree_make_sub: Can't parse %ld\n", id);
+        fprintf(stderr, "Can't parse: %s\n", expr);
         return NULL;
     }
     assign_variable_id(tree->config, node);

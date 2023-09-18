@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-// #include <valgrind/callgrind.h>
+#include <valgrind/callgrind.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>

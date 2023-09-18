@@ -8,7 +8,7 @@ UNAME := $(shell uname)
 
 # CFLAGS := -O0 -g \
 
-CFLAGS := -O3 -g \
+CFLAGS := -O0 -g \
 	-std=gnu11 -Wall -Wextra -Wshadow -Wfloat-equal -Wundef -Wcast-align \
 	-Wwrite-strings -Wunreachable-code -Wformat=2 -Wswitch-enum \
 	-Wswitch-default -Winit-self -Wno-strict-aliasing

@@ -82,7 +82,10 @@ variables() ->
             {ads_txt_relationship, int, allow_undefined},
             {samsung_device_country, bin, allow_undefined},
             {marketing_name, bin, allow_undefined},
-            {genre_array, bin_list, allow_undefined}
+            % {genre_array, bin_list, allow_undefined}
+            {genre_array, bin_list, allow_undefined},
+            {consent_vendor_ids, int_list, allow_undefined},
+            {tcf_optout, bool, allow_undefined}
         ],
         [
             {width, int, disallow_undefined},

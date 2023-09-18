@@ -19,7 +19,7 @@
 #include "var.h"
 
 // #define DEGA_1294
-#define DEGA_1468
+// #define DEGA_1468
 
 struct ast_node* ast_node_create()
 {

@@ -3,7 +3,7 @@
 % For example
 % convert_expr:convert_files("id-const-expr.txt", "../build/tests/data/betree_exprs", "../build/tests/data/betree_constants").
 % 
-% Before running check that ther is no \n or \n\n in id-const-expr.txt
+% Before running check that there is no \n or \n\n in id-const-expr.txt
 % 
 
 -module(convert_expr).

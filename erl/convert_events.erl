@@ -1,9 +1,13 @@
 % 
 % Convers files with raw events from betree_events_raw to proper format betree_events
 % For example
-% convert_events:convert_files("be-search-args", "../build/tests/data/betree_events").
+% convert_events:convert_files("betree_events_raw", "../build/tests/data/betree_events").
 % 
-
+% make shure that thre are no \n
+% in editor change:
+% "\r" -> [13]
+% "\t" -> [9]
+% 
 -module(convert_events).
 
 
@@ -11,7 +15,7 @@
 -export([flight_request_variables/1, flight_impression_variables/1, flight_vpaid_variables/1]).
 % -export[to_file/0, to_file/1, to_file/2].
 -export([t_to_l/1, convert/1, beautify/1]).
--export([test/0, tbeautify/1]).
+-export([test/0, test/1, tbeautify/1]).
 
 
 -record(flight_request_variables, {
@@ -79,7 +83,10 @@
     ads_txt_relationship,
     samsung_device_country,
     marketing_name,
-    genre_array
+    % genre_array
+    genre_array,
+    consent_vendor_ids,
+    tcf_optout
 }).
 
 % -type flight_request_variables() :: #flight_request_variables{}.
@@ -172,6 +179,8 @@ fwrt([[A, B] | Tail], Acc) when is_list(B) ->
     fwrt(Tail, [io_lib:fwrite(",~p:",[A]) ++ io_print(B) | Acc]); 
 fwrt([[A, B] | Tail], Acc) -> 
     fwrt(Tail, [io_lib:fwrite(",~p:~p",[A, B]) | Acc]); 
+fwrt([], []) ->
+    []; 
 fwrt([], Acc) -> 
     lists:reverse([io_lib:fwrite("}\n", []) | Acc]).
 
@@ -185,7 +194,7 @@ to_file(Fname, TpList, Options) ->
 
 convert_files() -> convert_files("betree_events_raw").
 
-convert_files(FileFrom) -> convert_files(FileFrom, "betree_events").
+convert_files(FileFrom) -> convert_files(FileFrom, "../build/tests/data/betree_events").
 
 convert_files(FileFrom, FileTo) ->
     {ok, [E | Events]} = file:consult(FileFrom),
@@ -193,7 +202,8 @@ convert_files(FileFrom, FileTo) ->
     lists:foreach(fun(X) -> to_file(FileTo, X) end, Events).
 
 
-test() ->
+test() -> test(1).
+test(1) ->
     [{flight_vpaid_variables,[]}, 
     {flight_request_variables,[1,4],
                         11,0,<<"0">>,<<"US">>,<<"NC">>,<<"durham">>,
@@ -224,14 +234,21 @@ test() ->
                         [111, 828,1085,1271,1310,1984,2614,2932,2954,2980,3006,3152,3308,3309],
                         <<"app">>,undefined,true,<<"Spectrum">>,
                         <<"Spectrum">>,2,undefined,<<"Cable/DSL">>,858181,
-                        <<>>,[],2,undefined,<<"UNKNOWN">>,undefined},
+                        <<>>,[],2,undefined,<<"UNKNOWN">>,undefined
+                        ,undefined,undefined
+                    },
     {flight_impression_variables,1,1,
                             [3],
                             undefined,
                             [<<"PM-CMFV-3433">>,<<"PM-PZXL-5134">>],
                             undefined,false,0,5,120,1920,1080,true,
-                            undefined,undefined,[]}].
-    
+                            undefined,undefined,[]}];
+test(2) ->
+    [{product_request_variables,6,<<"US">>,<<"GA">>,<<"atlanta">>,33.7485,
+                            -84.3871,<<"30302">>,524,true,<<"en">>,5,12,19,0,
+                            0,0,[],103,undefined,1694790415},
+    {product_impression_variables,2,2}].
+                            
 % convert_events:beautify(convert_events:convert(convert_events:test())).
 % lists:foreach(fun(X) -> io:format("~p:~p,~n", X) end, convert_events:beautify(convert_events:convert(convert_events:test()))).
 % 
